@@ -8,7 +8,11 @@ from gensim.models.coherencemodel import CoherenceModel
 
 def evaluate():
     print("--- Evaluating NVDM ---")
-    base_dir = r"d:\Documents1\Project"
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+    except NameError:
+        base_dir = os.getcwd()
+        
     finsen_dir = os.path.join(base_dir, "kaggle_finsen_dataset")
     
     # Paths

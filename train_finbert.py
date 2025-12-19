@@ -11,7 +11,11 @@ import json
 
 def train_finbert():
     print("--- Training FinBERT on StockEmotions ---")
-    base_dir = r"d:\Documents1\Project"
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+    except NameError:
+        base_dir = os.getcwd()
+        
     stock_dir = os.path.join(base_dir, "kaggle_stockEmotions_dataset", "tweet")
     
     # 1. Load Training Data (Resampled)

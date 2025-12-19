@@ -8,7 +8,11 @@ from finbert_model import FinBERTClassifier
 
 def evaluate_finbert():
     print("--- Evaluating FinBERT on StockEmotions (Test Set) ---")
-    base_dir = r"d:\Documents1\Project"
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+    except NameError:
+        base_dir = os.getcwd()
+        
     stock_dir = os.path.join(base_dir, "kaggle_stockEmotions_dataset", "tweet")
     
     # 1. Load Test Data
