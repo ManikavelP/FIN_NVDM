@@ -51,8 +51,10 @@ def loss_function(recon_logits, x, mu, logvar):
 
     return recon_loss + kl_loss, recon_loss, kl_loss
 
-def train(model, train_loader, optimizer, epochs=10, device='cpu'):
+def train(model, train_loader, optimizer, epochs=10, device='cpu', save_dir=None):
     model.train()
+    best_loss = float('inf')
+    
     for epoch in range(epochs):
         total_loss = 0
         total_recon = 0
@@ -77,6 +79,13 @@ def train(model, train_loader, optimizer, epochs=10, device='cpu'):
         
         avg_loss = total_loss / len(train_loader)
         print(f"=== Epoch {epoch+1} Average Loss: {avg_loss:.4f} ===")
+        
+        # Save Best Model Logic
+        if save_dir and avg_loss < best_loss:
+            best_loss = avg_loss
+            best_path = os.path.join(save_dir, "nvdm_finsen_best.pth")
+            torch.save(model.state_dict(), best_path)
+            print(f"New best model saved to {best_path} (Loss: {best_loss:.4f})")
 
 def main():
     base_dir = r"d:\Documents1\Project"
@@ -91,7 +100,7 @@ def main():
 
     # Hyperparameters
     BATCH_SIZE = 64
-    EPOCHS = 50 # Increased for full training
+    EPOCHS = 15 # Increased for full training
     LR = 1e-3
     LATENT_DIM = 40
     HIDDEN_DIM = 500
@@ -111,7 +120,7 @@ def main():
     
     # Training Loop
     try:
-        train(model, train_loader, optimizer, epochs=EPOCHS, device=DEVICE)
+        train(model, train_loader, optimizer, epochs=EPOCHS, device=DEVICE, save_dir=finsen_dir)
         
         # Save Model
         save_path = os.path.join(finsen_dir, "nvdm_finsen.pth")
