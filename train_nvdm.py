@@ -89,9 +89,7 @@ def train(model, train_loader, optimizer, epochs=10, device='cpu', save_dir=None
             total_recon += recon.item()
             total_kl += kl.item()
             
-            if batch_idx % 100 == 0:
-                print(f"Epoch {epoch+1} [{batch_idx}/{len(train_loader)}] Loss: {loss.item():.4f} (Recon: {recon.item():.4f}, KL: {kl.item():.4f})")
-        
+          
         avg_loss = total_loss / len(train_loader)
         print(f"=== Epoch {epoch+1} Average Loss: {avg_loss:.4f} ===")
         
