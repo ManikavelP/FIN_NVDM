@@ -6,6 +6,21 @@ import scipy.sparse
 import os
 from nvdm import NVDM
 import torch.nn.functional as F
+import json
+
+def print_top_words(model, id2word, n_topics=5, n_words=10):
+    model.eval()
+    print(f"\n--- Top Words for first {n_topics} Topics ---")
+    # Decoder: Linear(Latent, Vocab). Weight: (Vocab, Latent)
+    decoder_weight = model.decoder_fc.weight.data.cpu().numpy()
+    
+    for k in range(n_topics):
+        topic_col = decoder_weight[:, k]
+        top_indices = topic_col.argsort()[::-1][:n_words]
+        top_words = [id2word[i] for i in top_indices]
+        print(f"Topic {k}: {', '.join(top_words)}")
+    print("---------------------------------------------\n")
+    model.train()
 
 class SparseBowDataset(Dataset):
     def __init__(self, npz_path):
@@ -51,7 +66,7 @@ def loss_function(recon_logits, x, mu, logvar):
 
     return recon_loss + kl_loss, recon_loss, kl_loss
 
-def train(model, train_loader, optimizer, epochs=10, device='cpu', save_dir=None):
+def train(model, train_loader, optimizer, epochs=10, device='cpu', save_dir=None, id2word=None):
     model.train()
     best_loss = float('inf')
     
@@ -79,6 +94,10 @@ def train(model, train_loader, optimizer, epochs=10, device='cpu', save_dir=None
         
         avg_loss = total_loss / len(train_loader)
         print(f"=== Epoch {epoch+1} Average Loss: {avg_loss:.4f} ===")
+        
+        # Monitor Topics
+        if id2word:
+            print_top_words(model, id2word, n_topics=5, n_words=8)
         
         # Save Best Model Logic
         if save_dir and avg_loss < best_loss:
@@ -123,9 +142,19 @@ def main():
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=LR)
     
+    # Load Vocab for monitoring
+    vocab_path = os.path.join(finsen_dir, "finsen_vocab.json")
+    id2word = None
+    if os.path.exists(vocab_path):
+        with open(vocab_path, 'r') as f:
+            vocab = json.load(f)
+            id2word = {v: k for k, v in vocab.items()}
+    else:
+        print("Warning: Vocab file not found. Topic monitoring disabled.")
+
     # Training Loop
     try:
-        train(model, train_loader, optimizer, epochs=EPOCHS, device=DEVICE, save_dir=finsen_dir)
+        train(model, train_loader, optimizer, epochs=EPOCHS, device=DEVICE, save_dir=finsen_dir, id2word=id2word)
         
         # Save Model
         save_path = os.path.join(finsen_dir, "nvdm_finsen.pth")
